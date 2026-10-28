@@ -25,32 +25,37 @@ import 'package:toneharbor/l10n/app_localizations.dart';
 
 class _Engine extends HarborMediaEngine {
   Completer<void>? pending;
-  final calls = <({
-    String output,
-    double start,
-    double? end,
-    AudioEditEffects effects
-  })>[];
+  bool rendering = false;
+  final calls =
+      <
+        ({String output, double start, double? end, AudioEditEffects effects})
+      >[];
   @override
   Future<double?> duration(String input) async => 60;
   @override
-  Future<void> export(
-      {required String input,
-      required String output,
-      double start = 0,
-      double? end,
-      double volume = 1,
-      double fadeIn = 0,
-      double fadeOut = 0,
-      bool spatial = false,
-      double rotation = .125,
-      double depth = 1,
-      double reverb = .3,
-      AudioEditEffects effects = const AudioEditEffects(),
-      void Function(double)? onProgress}) async {
+  Future<void> export({
+    required String input,
+    required String output,
+    double start = 0,
+    double? end,
+    double volume = 1,
+    double fadeIn = 0,
+    double fadeOut = 0,
+    bool spatial = false,
+    double rotation = .125,
+    double depth = 1,
+    double reverb = .3,
+    AudioEditEffects effects = const AudioEditEffects(),
+    void Function(double)? onProgress,
+  }) async {
     calls.add((output: output, start: start, end: end, effects: effects));
     onProgress?.call(.5);
-    if (pending != null) await pending!.future;
+    rendering = true;
+    try {
+      if (pending != null) await pending!.future;
+    } finally {
+      rendering = false;
+    }
   }
 
   @override
@@ -58,7 +63,7 @@ class _Engine extends HarborMediaEngine {
     super.cancel();
     final gate = pending;
     pending = null;
-    if (gate != null && !gate.isCompleted) {
+    if (rendering && gate != null && !gate.isCompleted) {
       gate.completeError(const MediaExportCancelled());
     }
   }
@@ -76,16 +81,21 @@ class _Preview extends HarborEditorPreview {
 class _Player extends StateNotifier<PlayerState>
     implements AudioPlayerNotifier {
   _Player()
-      : super(PlayerState(queue: [
-          SongModel(
+    : super(
+        PlayerState(
+          queue: [
+            SongModel(
               id: 999,
               title: 'Main queue',
               artist: '',
               album: '',
               data: 'queue.mp3',
               duration: 60000,
-              dateAdded: 0)
-        ]));
+              dateAdded: 0,
+            ),
+          ],
+        ),
+      );
   @override
   void setSleepBoundary({bool track = false, bool queue = false}) {}
   @override
@@ -111,56 +121,79 @@ class _Lists extends StateNotifier<AsyncValue<List<PlaylistModel>>>
 
 class _Picker extends FilePicker {
   @override
-  Future<String?> saveFile(
-          {String? dialogTitle,
-          String? fileName,
-          String? initialDirectory,
-          FileType type = FileType.any,
-          List<String>? allowedExtensions,
-          Uint8List? bytes,
-          bool lockParentWindow = false}) async =>
-      'C:/Exports/edited.mp3';
+  Future<String?> saveFile({
+    String? dialogTitle,
+    String? fileName,
+    String? initialDirectory,
+    FileType type = FileType.any,
+    List<String>? allowedExtensions,
+    Uint8List? bytes,
+    bool lockParentWindow = false,
+  }) async => 'C:/Exports/edited.mp3';
 }
 
 Future<GoRouter> _mount(
-    WidgetTester tester, _Engine engine, _Preview preview, _Player player,
-    {Size size = const Size(1600, 1000),
-    Locale locale = const Locale('en')}) async {
+  WidgetTester tester,
+  _Engine engine,
+  _Preview preview,
+  _Player player, {
+  Size size = const Size(1600, 1000),
+  Locale locale = const Locale('en'),
+  Future<Directory> Function()? createPreviewDirectory,
+}) async {
   SharedPreferences.setMockInitialValues({});
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
-  final router = GoRouter(initialLocation: '/editing', routes: [
-    ShellRoute(
+  final router = GoRouter(
+    initialLocation: '/editing',
+    routes: [
+      ShellRoute(
         builder: (_, __, child) => ToneHarborDesktop(child: child),
         routes: [
           GoRoute(
-              path: '/editing',
-              pageBuilder: (_, __) => NoTransitionPage(
-                  child: HarborAudioEditor(
-                      initialFile: r'C:\Music\جلسة هادئة.wav',
-                      engine: engine,
-                      preview: preview))),
-        ])
-  ]);
-  await tester.pumpWidget(RepaintBoundary(
+            path: '/editing',
+            pageBuilder: (_, __) => NoTransitionPage(
+              child: HarborAudioEditor(
+                initialFile: r'C:\Music\جلسة هادئة.wav',
+                engine: engine,
+                createPreviewDirectory:
+                    createPreviewDirectory ??
+                    () => Directory.systemTemp.createTemp(
+                      'toneharbor-editor-test-',
+                    ),
+                preview: preview,
+              ),
+            ),
+          ),
+        ],
+      ),
+    ],
+  );
+  await tester.pumpWidget(
+    RepaintBoundary(
       key: const ValueKey('editor-capture'),
       child: ProviderScope(
-          overrides: [
-            waveformProvider.overrideWith((_, __) async =>
-                List.generate(1536, (i) => .08 + (i % 93) / 130)),
-            waveformWindowProvider.overrideWith((_, __) async => const []),
-            artworkBytesProvider.overrideWith((_, __) async => null),
-            songLibraryProvider.overrideWith((_) async => const []),
-            playlistRepositoryProvider.overrideWith((_) => _Lists()),
-            audioPlayerProvider.overrideWith((_) => player),
-          ],
-          child: MaterialApp.router(
-              debugShowCheckedModeBanner: false,
-              theme: buildHarborTheme(),
-              routerConfig: router,
-              locale: locale,
-              localizationsDelegates: AppLocalizations.localizationsDelegates,
-              supportedLocales: AppLocalizations.supportedLocales))));
+        overrides: [
+          waveformProvider.overrideWith(
+            (_, __) async => List.generate(1536, (i) => .08 + (i % 93) / 130),
+          ),
+          waveformWindowProvider.overrideWith((_, __) async => const []),
+          artworkBytesProvider.overrideWith((_, __) async => null),
+          songLibraryProvider.overrideWith((_) async => const []),
+          playlistRepositoryProvider.overrideWith((_) => _Lists()),
+          audioPlayerProvider.overrideWith((_) => player),
+        ],
+        child: MaterialApp.router(
+          debugShowCheckedModeBanner: false,
+          theme: buildHarborTheme(),
+          routerConfig: router,
+          locale: locale,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+        ),
+      ),
+    ),
+  );
   await tester.pumpAndSettle();
   return router;
 }
@@ -175,65 +208,84 @@ Future<void> unmount(WidgetTester tester, GoRouter router) async {
   tester.view.resetDevicePixelRatio();
 }
 
+Future<void> waitForAsync(WidgetTester tester, bool Function() ready) async {
+  for (var i = 0; i < 200 && !ready(); i++) {
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 25)),
+    );
+    await tester.pump(const Duration(milliseconds: 16));
+  }
+  expect(
+    ready(),
+    isTrue,
+    reason: 'The requested asynchronous operation must complete',
+  );
+}
+
 void main() {
   testWidgets(
-      'editor selection, undo, effects and export are wired to the actual draft',
-      (tester) async {
-    final engine = _Engine(), preview = _Preview(), player = _Player();
-    FilePicker.platform = _Picker();
-    final router = await _mount(tester, engine, preview, player);
-    expect(
-        find.byKey(const ValueKey('editor-selection-range')), findsOneWidget);
-    await tester.enterText(find.byKey(const ValueKey('editor-start')), '5');
-    await tester.testTextInput.receiveAction(TextInputAction.done);
-    await tester.pumpAndSettle();
-    await tester.enterText(find.byKey(const ValueKey('editor-end')), '45');
-    await tester.testTextInput.receiveAction(TextInputAction.done);
-    await tester.pumpAndSettle();
-    await tester.ensureVisible(find.byTooltip('Undo'));
-    await tester.tap(find.byTooltip('Undo'));
-    await tester.pumpAndSettle();
-    expect(
+    'editor selection, undo, effects and export are wired to the actual draft',
+    (tester) async {
+      final engine = _Engine(), preview = _Preview(), player = _Player();
+      FilePicker.platform = _Picker();
+      final router = await _mount(tester, engine, preview, player);
+      expect(
+        find.byKey(const ValueKey('editor-selection-range')),
+        findsOneWidget,
+      );
+      await tester.enterText(find.byKey(const ValueKey('editor-start')), '5');
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byKey(const ValueKey('editor-end')), '45');
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.byTooltip('Undo'));
+      await tester.tap(find.byTooltip('Undo'));
+      await tester.pumpAndSettle();
+      expect(
         tester
             .widget<TextField>(find.byKey(const ValueKey('editor-end')))
             .controller!
             .text,
-        '60.000');
-    await tester.tap(find.byTooltip('Redo'));
-    await tester.pumpAndSettle();
-    expect(
+        '60.000',
+      );
+      await tester.tap(find.byTooltip('Redo'));
+      await tester.pumpAndSettle();
+      expect(
         tester
             .widget<TextField>(find.byKey(const ValueKey('editor-end')))
             .controller!
             .text,
-        '45.000');
-    final speed = tester
-        .widget<Slider>(find.byKey(const ValueKey('editor-control-Speed')));
-    speed.onChanged!(2);
-    await tester.pumpAndSettle();
-    expect(find.text('Output duration: 0:20.00'), findsOneWidget);
-    await tester.ensureVisible(find.text('Export audio'));
-    await tester.tap(find.text('Export audio'));
-    await tester.pumpAndSettle();
-    expect(engine.calls.single.start, 5);
-    expect(engine.calls.single.end, 45);
-    expect(engine.calls.single.effects.speed, 2);
-    expect(engine.calls.single.effects.sampleRate, 48000);
-    expect(engine.calls.single.output, 'C:/Exports/edited.mp3');
-    expect(find.text('Play audio'), findsOneWidget);
-    expect(player.state.currentSong?.id, 999);
-    expect(tester.takeException(), isNull);
-    await unmount(tester, router);
-  });
+        '45.000',
+      );
+      final speed = tester.widget<Slider>(
+        find.byKey(const ValueKey('editor-control-Speed')),
+      );
+      speed.onChanged!(2);
+      await tester.pumpAndSettle();
+      expect(find.text('Output duration: 0:20.00'), findsOneWidget);
+      await tester.ensureVisible(find.text('Export audio'));
+      await tester.tap(find.text('Export audio'));
+      await tester.pumpAndSettle();
+      expect(engine.calls.single.start, 5);
+      expect(engine.calls.single.end, 45);
+      expect(engine.calls.single.effects.speed, 2);
+      expect(engine.calls.single.effects.sampleRate, 48000);
+      expect(engine.calls.single.output, 'C:/Exports/edited.mp3');
+      expect(find.text('Play audio'), findsOneWidget);
+      expect(player.state.currentSong?.id, 999);
+      expect(tester.takeException(), isNull);
+      await unmount(tester, router);
+    },
+  );
 
-  testWidgets('preview is bounded and leaves the main playback queue intact',
-      (tester) async {
+  testWidgets('preview is bounded and leaves the main playback queue intact', (
+    tester,
+  ) async {
     final engine = _Engine(), preview = _Preview(), player = _Player();
     final router = await _mount(tester, engine, preview, player);
     await tester.tap(find.byKey(const ValueKey('editor-preview')));
-    await tester.runAsync(() async {
-      await Future<void>.delayed(const Duration(milliseconds: 80));
-    });
+    await waitForAsync(tester, () => preview.path != null);
     await tester.pumpAndSettle();
     expect(engine.calls.single.start, 0);
     expect(engine.calls.single.end, 30);
@@ -247,70 +299,130 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('editor-preview')));
     await tester.pumpAndSettle();
     expect(player.state.isPlaying, isFalse);
-    expect(engine.calls, hasLength(1),
-        reason: 'Resume reuses the rendered preview');
+    expect(
+      engine.calls,
+      hasLength(1),
+      reason: 'Resume reuses the rendered preview',
+    );
     await unmount(tester, router);
   });
 
   testWidgets(
-      'cancel preview releases the render job and keeps the editor usable',
-      (tester) async {
+    'cancel preview releases the render job and keeps the editor usable',
+    (tester) async {
+      final engine = _Engine(), preview = _Preview(), player = _Player();
+      final router = await _mount(tester, engine, preview, player);
+      engine.pending = Completer<void>();
+      await tester.tap(find.byKey(const ValueKey('editor-preview')));
+      await waitForAsync(tester, () => engine.rendering);
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Cancel preview'));
+      await tester.tap(find.text('Cancel preview'));
+      await tester.pumpAndSettle();
+      expect(find.text('Cancelled'), findsOneWidget);
+      expect(preview.path, isNull);
+      expect(
+        tester
+            .widget<FilledButton>(find.byKey(const ValueKey('editor-preview')))
+            .onPressed,
+        isNotNull,
+      );
+      expect(tester.takeException(), isNull);
+      await unmount(tester, router);
+    },
+  );
+
+  testWidgets('cancelling directory preparation never starts a late render', (
+    tester,
+  ) async {
     final engine = _Engine(), preview = _Preview(), player = _Player();
-    final router = await _mount(tester, engine, preview, player);
-    engine.pending = Completer<void>();
-    await tester.tap(find.byKey(const ValueKey('editor-preview')));
+    final gate = Completer<Directory>();
+    late Directory directory;
     await tester.runAsync(() async {
-      await Future<void>.delayed(const Duration(milliseconds: 80));
+      directory = await Directory.systemTemp.createTemp(
+        'toneharbor-cancel-test-',
+      );
     });
+    final router = await _mount(
+      tester,
+      engine,
+      preview,
+      player,
+      createPreviewDirectory: () => gate.future,
+    );
+    await tester.tap(find.byKey(const ValueKey('editor-preview')));
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Cancel preview'));
     await tester.tap(find.text('Cancel preview'));
     await tester.pumpAndSettle();
     expect(find.text('Cancelled'), findsOneWidget);
+    expect(engine.calls, isEmpty);
+    gate.complete(directory);
+    var removed = false;
+    for (var i = 0; i < 100 && !removed; i++) {
+      await tester.runAsync(() async {
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+        removed = !await directory.exists();
+      });
+      await tester.pump();
+    }
+    expect(removed, isTrue);
+    expect(engine.calls, isEmpty);
     expect(preview.path, isNull);
-    expect(
-        tester
-            .widget<FilledButton>(find.byKey(const ValueKey('editor-preview')))
-            .onPressed,
-        isNotNull);
-    expect(tester.takeException(), isNull);
     await unmount(tester, router);
   });
 
-  testWidgets('invalid trim bounds are reported before starting preview/export',
-      (tester) async {
-    final engine = _Engine(), preview = _Preview(), player = _Player();
-    final router = await _mount(tester, engine, preview, player);
-    await tester.enterText(find.byKey(const ValueKey('editor-end')), '1000');
-    await tester.testTextInput.receiveAction(TextInputAction.done);
-    await tester.pumpAndSettle();
-    expect(find.text('Selection must fit inside the source.'), findsOneWidget);
-    expect(engine.calls, isEmpty);
-    expect(tester.takeException(), isNull);
-    await unmount(tester, router);
-  });
+  testWidgets(
+    'invalid trim bounds are reported before starting preview/export',
+    (tester) async {
+      final engine = _Engine(), preview = _Preview(), player = _Player();
+      final router = await _mount(tester, engine, preview, player);
+      await tester.enterText(find.byKey(const ValueKey('editor-end')), '1000');
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pumpAndSettle();
+      expect(
+        find.text('Selection must fit inside the source.'),
+        findsOneWidget,
+      );
+      expect(engine.calls, isEmpty);
+      expect(tester.takeException(), isNull);
+      await unmount(tester, router);
+    },
+  );
 
   for (final size in [const Size(900, 650), const Size(3440, 1440)]) {
-    testWidgets('Arabic editor fits ${size.width} x ${size.height}',
-        (tester) async {
-      final router = await _mount(tester, _Engine(), _Preview(), _Player(),
-          size: size, locale: const Locale('ar'));
+    testWidgets('Arabic editor fits ${size.width} x ${size.height}', (
+      tester,
+    ) async {
+      final router = await _mount(
+        tester,
+        _Engine(),
+        _Preview(),
+        _Player(),
+        size: size,
+        locale: const Locale('ar'),
+      );
       expect(find.text('تعديل الصوت'), findsOneWidget);
       expect(
-          find.byKey(const ValueKey('editor-selection-range')), findsOneWidget);
+        find.byKey(const ValueKey('editor-selection-range')),
+        findsOneWidget,
+      );
       expect(tester.takeException(), isNull);
       await unmount(tester, router);
     });
   }
 
   if (const bool.fromEnvironment('HARBOR_PREVIEW')) {
-    testWidgets('export production editor preview with a sample waveform',
-        (tester) async {
+    testWidgets('export production editor preview with a sample waveform', (
+      tester,
+    ) async {
       await tester.runAsync(() async {
         final font = FontLoader('Segoe UI')
-          ..addFont(File(r'C:\Windows\Fonts\segoeui.ttf')
-              .readAsBytes()
-              .then((b) => ByteData.sublistView(b)));
+          ..addFont(
+            File(
+              r'C:\Windows\Fonts\segoeui.ttf',
+            ).readAsBytes().then((b) => ByteData.sublistView(b)),
+          );
         await font.load();
         final icons = FontLoader('MaterialIcons')
           ..addFont(rootBundle.load('fonts/MaterialIcons-Regular.otf'));
@@ -318,20 +430,24 @@ void main() {
       });
       final router = await _mount(tester, _Engine(), _Preview(), _Player());
       await tester.runAsync(() async {
-        await Future.wait(find
-            .byType(Image)
-            .evaluate()
-            .map((e) => precacheImage((e.widget as Image).image, e)));
+        await Future.wait(
+          find
+              .byType(Image)
+              .evaluate()
+              .map((e) => precacheImage((e.widget as Image).image, e)),
+        );
       });
       await tester.pumpAndSettle();
       await tester.runAsync(() async {
         final boundary = tester.renderObject<RenderRepaintBoundary>(
-            find.byKey(const ValueKey('editor-capture')));
+          find.byKey(const ValueKey('editor-capture')),
+        );
         final image = await boundary.toImage();
         final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
         await Directory('output').create(recursive: true);
-        await File('output/ToneHarbor-audio-editor-v22.png')
-            .writeAsBytes(bytes!.buffer.asUint8List());
+        await File(
+          'output/ToneHarbor-audio-editor-v22.png',
+        ).writeAsBytes(bytes!.buffer.asUint8List());
         image.dispose();
       });
       await unmount(tester, router);

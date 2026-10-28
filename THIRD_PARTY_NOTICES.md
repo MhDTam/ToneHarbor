@@ -23,6 +23,6 @@ FFmpeg licensing depends on enabled components. When distributing an FFmpeg bina
 
 ## Artwork and fonts
 
-The project owner authorized the included original artwork under MIT. Raster assets and theme variants are included as source assets. Screenshots use synthetic library fixtures and do not grant rights to unrelated music or user-supplied artwork.
+The project owner authorized the included original artwork under MIT. Raster assets and theme variants are included as source assets. Live screenshots use generated demo audio in an isolated profile and do not grant rights to unrelated music or user-supplied artwork.
 
 Segoe UI is a Windows system font and is not redistributed. Material icons come through Flutter and retain the SDK's notices. Existing file-specific copyright/license headers remain applicable.

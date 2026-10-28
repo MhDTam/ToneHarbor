@@ -25,6 +25,10 @@ A desktop music player, batch converter and audio editing workspace for Windows,
 
 [View all screenshots](docs/SCREENSHOTS.md) · [الصفحة العربية](README.ar.md)
 
+## Download for Windows
+
+[Download ToneHarbor 1.1.4](https://github.com/MhDTam/ToneHarbor/releases/tag/v1.1.4). Extract the ZIP and run ToneHarbor.exe. This portable build needs no Flutter SDK. FFmpeg is a separate dependency for waveforms, editing and conversion; see the release instructions.
+
 ## Supported platform
 
 Windows x64 is the maintained and tested target. Other platform projects are not included. Shared Dart code contains platform adapters, but this repository does not promise builds for those platforms.
@@ -60,7 +64,7 @@ The result is `dist/ToneHarbor/`. Keep its executable, DLLs and `data/` together
 
 The editor exports to a new file and protects existing outputs. Preview renders up to 30 output seconds into temporary storage and does not replace the main music queue. The waveform shows amplitude over time, rather than a live frequency spectrum.
 
-Screenshots use sample library entries and a fixture waveform to demonstrate the interface.
+Screenshots are captured from the running Windows app using generated demo audio and an isolated profile. The displayed waveforms are decoded from those files by FFmpeg.
 
 ## Development and publishing
 

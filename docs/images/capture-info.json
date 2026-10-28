@@ -1,0 +1,54 @@
+{
+  "status": "complete",
+  "captures": [
+    {
+      "file": "home.png",
+      "width": 2250,
+      "height": 1350,
+      "source": "running Windows application",
+      "audio": "generated demo audio decoded by native playback/FFmpeg"
+    },
+    {
+      "file": "library.png",
+      "width": 2250,
+      "height": 1350,
+      "source": "running Windows application",
+      "audio": "generated demo audio decoded by native playback/FFmpeg"
+    },
+    {
+      "file": "full-player.png",
+      "width": 2250,
+      "height": 1350,
+      "source": "running Windows application",
+      "audio": "generated demo audio decoded by native playback/FFmpeg"
+    },
+    {
+      "file": "playlists.png",
+      "width": 2250,
+      "height": 1350,
+      "source": "running Windows application",
+      "audio": "generated demo audio decoded by native playback/FFmpeg"
+    },
+    {
+      "file": "settings.png",
+      "width": 2250,
+      "height": 1350,
+      "source": "running Windows application",
+      "audio": "generated demo audio decoded by native playback/FFmpeg"
+    },
+    {
+      "file": "audio-editor.png",
+      "width": 2250,
+      "height": 1350,
+      "source": "running Windows application",
+      "audio": "generated demo audio decoded by native playback/FFmpeg"
+    },
+    {
+      "file": "home-ar.png",
+      "width": 2250,
+      "height": 1350,
+      "source": "running Windows application",
+      "audio": "generated demo audio decoded by native playback/FFmpeg"
+    }
+  ]
+}

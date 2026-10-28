@@ -29,7 +29,11 @@ import 'services/cache_cleanup_service.dart';
 // Conditionally import mobile-only packages
 import 'services/audio/audio_service_init.dart' as audio_init;
 
-void main() async {
+Future<void> main() => startToneHarbor();
+
+/// The optional root wrapper is used only by the live screenshot entry point.
+/// Normal release builds run the same application without capture overhead.
+Future<void> startToneHarbor({Widget Function(Widget)? wrap}) async {
   WidgetsFlutterBinding.ensureInitialized();
   if (isDesktop) {
     PaintingBinding.instance.imageCache
@@ -84,7 +88,8 @@ void main() async {
       await windowManager.focus();
     });
   }
-  runApp(const _AppInitializer());
+  const app = _AppInitializer();
+  runApp(wrap?.call(app) ?? app);
 }
 
 class _AppInitializer extends StatefulWidget {
@@ -149,7 +154,9 @@ class _AppInitializerState extends State<_AppInitializer> {
       }
 
       // Automatically clean up any stale temporary files from previous sessions
-      CacheCleanupService.clearAllCache().catchError((e) {
+      CacheCleanupService.clearAllCache(
+        olderThan: const Duration(days: 1),
+      ).catchError((e) {
         debugPrint('Startup cache cleanup error: $e');
       });
 

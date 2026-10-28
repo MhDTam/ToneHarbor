@@ -2,15 +2,19 @@
 
 [English overview](../README.md) · [⁧الصفحة العربية⁩](../README.ar.md)
 
-Production Flutter widget renders with sample library entries and fixture waveforms. These are interface previews, not captures of a private music library.
+Captured from the running Windows application at 2250×1350. The app uses generated demo audio and an isolated, disk-backed profile. Playback and waveform decoding use the actual native audio backend and FFmpeg. These are live application captures, not widget-test renders or design mockups.
 
-⁧صور من واجهات البرنامج باستخدام بيانات اختبار وموجات توضيحية، وليست تصويراً لمكتبة مستخدم شخصية.⁩
+⁧لقطات من تطبيق ويندوز أثناء تشغيله، بدقة 2250×1350. استُخدمت ملفات صوت تجريبية وملف بيانات معزول، مع تشغيل الصوت واستخراج الموجات عبر المحرك الفعلي وFFmpeg. الصور ليست نماذج تصميم أو صوراً مولّدة من اختبارات الواجهة.⁩
 
 ## Home · ⁧الرئيسية⁩
 
 ![ToneHarbor Home](images/home.png)
 
-## Library and multi-selection · ⁧المكتبة والتحديد المتعدد⁩
+## Arabic interface · ⁧الواجهة العربية⁩
+
+![ToneHarbor Arabic Home](images/home-ar.png)
+
+## Library · ⁧المكتبة⁩
 
 ![ToneHarbor Library](images/library.png)
 

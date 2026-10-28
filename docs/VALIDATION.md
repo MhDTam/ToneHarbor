@@ -15,3 +15,7 @@ Validated on Windows x64 on 2026-10-28, using Flutter 3.47.5, Dart 3.13.4 and th
 The logo test verifies its approved SHA-256 digest and 1254×1254 RGBA header without depending on a private design folder. Preview exporters create their own output directories.
 
 GitHub Actions is configured for Windows analysis, tests and compilation. Check the repository Actions tab for remote results. This record describes local source validation; source publication is separate from binary releases and signing. Local test logs and source export manifests remain outside the repository.
+
+Live runtime capture: the actual Windows app loaded eight generated MP3 files, populated real disk-backed playlists/preferences in an isolated directory, played and sought audio through just_audio_windows, decoded waveform data with FFmpeg, and exported seven 2250x1350 screenshots including Arabic. The editor capture waited for its complete real waveform before export. No personal library data was used.
+
+Release validation on 2026-10-29: analysis reported no issues; all 158 tests passed, including application-scoped cache cleanup and cancellation before editor preview directory preparation completes. The full suite ran with two workers and a two-minute per-test timeout on the local machine.

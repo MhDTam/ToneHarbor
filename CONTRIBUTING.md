@@ -39,3 +39,7 @@ Previews go to ignored `output/`. They are widget renders, not live Windows capt
 Keep pull requests focused. Explain the change, validation, limitations and any migration or dependency-license changes. Add meaningful regression tests for storage, cancellation, playback identity, deletion or resource lifecycle changes.
 
 By contributing, you agree to license your contribution under MIT and confirm you have the right to submit the code/assets.
+
+## Live application screenshots
+
+The published gallery uses the running app with generated demo audio and isolated disk-backed storage. See [LIVE_CAPTURE.md](docs/LIVE_CAPTURE.md) for the dedicated development entry point. It does not ship in normal builds.

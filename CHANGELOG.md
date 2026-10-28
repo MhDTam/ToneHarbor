@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.1.4 — Windows portable release
+
+- Added a downloadable Windows x64 portable package with license notices and SHA-256 verification.
+- Replaced the gallery with seven captures from the running app, including Arabic.
+- Documented separate FFmpeg and Microsoft Visual C++ runtime requirements.
+- Restricted cache cleanup to ToneHarbor's own directory; startup retains fresh cache files.
+- Fixed preview cancellation while the editor's temporary directory is still being prepared.
+- Restricted cache cleanup to ToneHarbor's own directory; startup retains fresh cache files.
+- Fixed preview cancellation while the editor's temporary directory is still being prepared.
+
 ## Source preparation — 2026-10-28
 
 - Added MIT licensing, dependency notices, clean source export and Windows CI.
