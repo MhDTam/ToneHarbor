@@ -7,8 +7,6 @@
 - Documented separate FFmpeg and Microsoft Visual C++ runtime requirements.
 - Restricted cache cleanup to ToneHarbor's own directory; startup retains fresh cache files.
 - Fixed preview cancellation while the editor's temporary directory is still being prepared.
-- Restricted cache cleanup to ToneHarbor's own directory; startup retains fresh cache files.
-- Fixed preview cancellation while the editor's temporary directory is still being prepared.
 
 ## Source preparation — 2026-10-28
 

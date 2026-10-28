@@ -23,7 +23,6 @@ The app also needs Microsoft's Visual C++ v14 x64 runtime. If it is missing, use
 - Windows Open with integration and single-instance activation.
 - FLAC export compatibility fix for newer FFmpeg builds.
 - Safe, application-scoped cache cleanup and reliable cancellation of pending editor previews.
-- Safe, application-scoped cache cleanup and reliable cancellation of pending editor previews.
 
 The project is licensed under MIT. Dependency notices and Flutter runtime notices are included. No user media, preferences or library databases are bundled.
 
@@ -47,6 +46,5 @@ Use **SHA256SUMS.txt** to verify the ZIP. GitHub's automatically generated sourc
 
 ⁧حُصر تنظيف الكاش في مجلد التطبيق الخاص، وأُصلح إلغاء المعاينة أثناء تجهيز محرّر الصوت.⁩
 
-⁧حُصر تنظيف الكاش في مجلد التطبيق الخاص، وأُصلح إلغاء المعاينة أثناء تجهيز محرّر الصوت.⁩
 
 ⁧المشروع بترخيص MIT، وإشعارات الاعتماديات مرفقة. لا يتضمن الأرشيف ملفات صوت شخصية أو إعدادات أو قواعد بيانات للمستخدم. ملف SHA256SUMS.txt مرفق للتحقق من سلامة التنزيل.⁩
