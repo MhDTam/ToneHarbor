@@ -1,0 +1,128 @@
+name: toneharbor
+description: ToneHarbor — a Windows music player, batch audio converter and audio editing workspace.
+publish_to: 'none'
+version: 1.1.4+11
+
+environment:
+  sdk: '>=3.11.0 <4.0.0'
+  flutter: '>=3.41.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # Audio playback & background service
+  just_audio: ^0.9.40
+  audio_service: ^0.18.15
+  audio_session: ^0.1.21
+
+  # Media scanner
+  on_audio_query: ^2.9.0
+
+  # Video conversion & editing (audio variant to keep MP3 encoding but exclude heavy video libs)
+  ffmpeg_kit_flutter_new_audio: ^2.0.0
+  uuid: ^4.3.3
+
+  # State management & navigation
+  flutter_riverpod: ^2.5.1
+  go_router: ^13.2.0
+
+  # Local database
+  # isar_community is the maintained fork of Isar. It ships 16 KB page-size
+  # aligned native libraries (the original isar 3.1.0 binaries are 4 KB aligned
+  # and are rejected on Android 15+/16 KB devices).
+  isar_community: ^3.3.2
+  isar_community_flutter_libs: ^3.3.2
+  path_provider: ^2.1.3
+
+  # File picking & permissions
+  file_picker: ^8.0.3
+  image_picker: ^1.0.7
+  permission_handler: ^11.3.1
+
+  # Preferences & storage
+  shared_preferences: ^2.2.3
+
+  # Utilities
+  intl: ^0.20.2
+  path: ^1.9.0
+  flutter_displaymode: ^0.7.0
+  rxdart: ^0.28.0
+  share_plus: ^12.0.1
+  window_manager: ^0.4.3
+  just_audio_windows: ^0.2.2
+  desktop_drop: ^0.7.0
+  audio_metadata_reader: ^1.4.2
+
+dev_dependencies:
+  crypto: ^3.0.7
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+  build_runner: ^2.4.9
+  isar_community_generator: ^3.3.2
+  flutter_launcher_icons: ^0.14.2
+  msix: ^3.16.13
+
+flutter_launcher_icons:
+  image_path: "assets/images/harbor/brand-glossy-v9.png"
+  android: false
+  ios: false
+  adaptive_icon_background: "#0E1217"
+  adaptive_icon_foreground: "assets/images/harbor/brand-glossy-v9.png"
+  windows:
+    generate: true
+    image_path: "assets/images/harbor/brand-glossy-v9.png"
+    icon_size: 256
+
+msix:
+  display_name: "ToneHarbor"
+  publisher_display_name: "ToneHarbor"
+  identity_name: "ToneHarbor.Desktop"
+  msix_version: 1.1.4.0
+  logo_path: "assets/images/harbor/brand-glossy-v9.png"
+
+flutter:
+  uses-material-design: true
+  generate: true
+
+  assets:
+    # Full-screen artwork for the Quranic / Ashura / Ramadan themes
+    # (quran.jpg, ashura.jpg, ramadan.jpg). Optional: the themes fall back to
+    # their gradient when an image is missing.
+    - assets/images/themes/
+    - assets/images/harbor/window-cover-v2.webp
+    - assets/images/harbor/green-studio-v2.webp
+    - assets/images/harbor/home-silk-hq-v22.webp
+    - assets/images/harbor/brand-mark-v7.png
+    - assets/images/harbor/brand-cutout-v8.png
+    - assets/images/harbor/brand-glossy-v9.png
+    - assets/images/harbor/defaults/
+    - assets/images/harbor/themed/ocean-window-cover-v22.webp
+    - assets/images/harbor/themed/violet-window-cover-v22.webp
+    - assets/images/harbor/themed/amber-window-cover-v22.webp
+    - assets/images/harbor/themed/crimson-window-cover-v22.webp
+    - assets/images/harbor/themed/ocean-city-favorites.webp
+    - assets/images/harbor/themed/ocean-green-studio-v2.webp
+    - assets/images/harbor/themed/ocean-leaves-playlists.webp
+    - assets/images/harbor/themed/ocean-mountain-listens.webp
+    - assets/images/harbor/themed/violet-city-favorites.webp
+    - assets/images/harbor/themed/violet-green-studio-v2.webp
+    - assets/images/harbor/themed/violet-leaves-playlists.webp
+    - assets/images/harbor/themed/violet-mountain-listens.webp
+    - assets/images/harbor/themed/amber-city-favorites.webp
+    - assets/images/harbor/themed/amber-green-studio-v2.webp
+    - assets/images/harbor/themed/amber-leaves-playlists.webp
+    - assets/images/harbor/themed/amber-mountain-listens.webp
+    - assets/images/harbor/themed/crimson-city-favorites.webp
+    - assets/images/harbor/themed/crimson-green-studio-v2.webp
+    - assets/images/harbor/themed/crimson-leaves-playlists.webp
+    - assets/images/harbor/themed/crimson-mountain-listens.webp
+    - assets/images/harbor/mountain-listens.webp
+    - assets/images/harbor/city-favorites.webp
+    - assets/images/harbor/leaves-playlists.webp
+
+  # Note: assets/images/app_icon.png and assets/images/placeholders/* are only
+  # used at build time (launcher icons) and are deliberately not bundled.

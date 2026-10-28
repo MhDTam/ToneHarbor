@@ -1,0 +1,9 @@
+* text=auto eol=lf
+*.cmd text eol=crlf
+*.png binary
+*.webp binary
+*.jpg binary
+*.ico binary
+# Preserve supplied license texts and their original whitespace.
+third_party/licenses/** -text -whitespace
+tools/FFmpeg-*.txt -text -whitespace
