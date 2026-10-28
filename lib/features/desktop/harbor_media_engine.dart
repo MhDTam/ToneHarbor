@@ -14,18 +14,24 @@ class HarborMediaEngine {
 
   static String executable() {
     final bundled = path.join(
-        path.dirname(Platform.resolvedExecutable), 'tools', 'ffmpeg.exe');
+      path.dirname(Platform.resolvedExecutable),
+      'tools',
+      'ffmpeg.exe',
+    );
     if (File(bundled).existsSync()) return bundled;
     final workspace = path.join(Directory.current.path, 'tools', 'ffmpeg.exe');
     return File(workspace).existsSync() ? workspace : 'ffmpeg';
   }
 
   Future<double?> duration(String input) async {
-    final result = await Process.run(
-        executable(), ['-hide_banner', '-i', input],
-        runInShell: false);
-    final match = RegExp(r'Duration:\s*(\d+):(\d+):(\d+(?:\.\d+)?)')
-        .firstMatch('${result.stderr}');
+    final result = await Process.run(executable(), [
+      '-hide_banner',
+      '-i',
+      input,
+    ], runInShell: false);
+    final match = RegExp(
+      r'Duration:\s*(\d+):(\d+):(\d+(?:\.\d+)?)',
+    ).firstMatch('${result.stderr}');
     if (match == null) return null;
     return int.parse(match[1]!) * 3600 +
         int.parse(match[2]!) * 60 +
@@ -37,57 +43,60 @@ class HarborMediaEngine {
     _running?.kill();
   }
 
-  Future<void> export(
-      {required String input,
-      required String output,
-      double start = 0,
-      double? end,
-      double volume = 1,
-      double fadeIn = 0,
-      double fadeOut = 0,
-      bool spatial = false,
-      double rotation = 0.125,
-      double depth = 1,
-      double reverb = .3,
-      AudioEditEffects effects = const AudioEditEffects(),
-      void Function(double seconds)? onProgress}) async {
+  Future<void> export({
+    required String input,
+    required String output,
+    double start = 0,
+    double? end,
+    double volume = 1,
+    double fadeIn = 0,
+    double fadeOut = 0,
+    bool spatial = false,
+    double rotation = 0.125,
+    double depth = 1,
+    double reverb = .3,
+    AudioEditEffects effects = const AudioEditEffects(),
+    void Function(double seconds)? onProgress,
+  }) async {
     if (running) throw StateError('A job is already running');
     _exporting = true;
     _cancelled = false;
     try {
       await _export(
-          input: input,
-          output: output,
-          start: start,
-          end: end,
-          volume: volume,
-          fadeIn: fadeIn,
-          fadeOut: fadeOut,
-          spatial: spatial,
-          rotation: rotation,
-          depth: depth,
-          reverb: reverb,
-          effects: effects,
-          onProgress: onProgress);
+        input: input,
+        output: output,
+        start: start,
+        end: end,
+        volume: volume,
+        fadeIn: fadeIn,
+        fadeOut: fadeOut,
+        spatial: spatial,
+        rotation: rotation,
+        depth: depth,
+        reverb: reverb,
+        effects: effects,
+        onProgress: onProgress,
+      );
     } finally {
       _exporting = false;
     }
   }
 
-  Future<void> _export(
-      {required String input,
-      required String output,
-      required double start,
-      required double? end,
-      required double volume,
-      required double fadeIn,
-      required double fadeOut,
-      required bool spatial,
-      required double rotation,
-      required double depth,
-      required double reverb,
-      required AudioEditEffects effects,
-      required void Function(double seconds)? onProgress}) async {
+  Future<void> _export({
+    required String input,
+    required String output,
+    required double start,
+    required double? end,
+    required double volume,
+    required double fadeIn,
+    required double fadeOut,
+    required bool spatial,
+    required double rotation,
+    required double depth,
+    required double reverb,
+    required AudioEditEffects effects,
+    required void Function(double seconds)? onProgress,
+  }) async {
     if (!await File(input).exists()) {
       throw const FileSystemException('Input file does not exist');
     }
@@ -96,7 +105,8 @@ class HarborMediaEngine {
     }
     if (await File(output).exists()) {
       throw const FileSystemException(
-          'Output file already exists; choose another name');
+        'Output file already exists; choose another name',
+      );
     }
     effects.validate();
     if (!start.isFinite ||
@@ -112,25 +122,28 @@ class HarborMediaEngine {
     }
     final extension = path.extension(output).toLowerCase();
     if (effects.sampleRate != null &&
-        !audioEditSampleRates(extension.substring(1))
-            .contains(effects.sampleRate)) {
+        !audioEditSampleRates(
+          extension.substring(1),
+        ).contains(effects.sampleRate)) {
       throw ArgumentError('Unsupported sample rate for $extension');
     }
     final codec = switch (extension) {
       '.mp3' => [
-          '-c:a',
-          'libmp3lame',
-          if (effects.bitrateKbps == null) ...[
-            '-q:a',
-            '2'
-          ] else ...[
-            '-b:a',
-            '${effects.bitrateKbps}k'
-          ]
+        '-c:a',
+        'libmp3lame',
+        if (effects.bitrateKbps == null) ...[
+          '-q:a',
+          '2',
+        ] else ...[
+          '-b:a',
+          '${effects.bitrateKbps}k',
         ],
+      ],
       '.m4a' => ['-c:a', 'aac', '-b:a', '${effects.bitrateKbps ?? 192}k'],
       '.wav' => ['-c:a', 'pcm_s16le'],
-      '.flac' => ['-c:a', 'flac'],
+      // Loudness/spatial filters can emit very large frames on newer FFmpeg
+      // builds. Keep FLAC blocks within the encoder's valid sample range.
+      '.flac' => ['-c:a', 'flac', '-frame_size', '4096'],
       '.ogg' => ['-c:a', 'libvorbis', '-q:a', '5'],
       '.opus' => ['-c:a', 'libopus', '-b:a', '${effects.bitrateKbps ?? 160}k'],
       _ => throw ArgumentError('Unsupported output format: $extension'),
@@ -146,7 +159,7 @@ class HarborMediaEngine {
       if (end != null) 'atrim=duration=${end - start}',
       'asetpts=PTS-STARTPTS',
       ...effects.filters,
-      'volume=$volume'
+      'volume=$volume',
     ];
     if (spatial) {
       final delay = (50 + reverb.clamp(0, 1) * 1950).round();
@@ -154,12 +167,14 @@ class HarborMediaEngine {
       filters.add('aformat=channel_layouts=stereo');
       filters.add('aecho=0.8:0.9:$delay:$decay');
       filters.add(
-          'apulsator=hz=${rotation.clamp(.01, 1.0)}:amount=${depth.clamp(0.0, 1.0)}');
+        'apulsator=hz=${rotation.clamp(.01, 1.0)}:amount=${depth.clamp(0.0, 1.0)}',
+      );
     }
     if (outputDuration != null) filters.add('atrim=duration=$outputDuration');
     if (fadeIn > 0) {
       filters.add(
-          'afade=t=in:st=0:d=${outputDuration == null ? fadeIn : fadeIn.clamp(0, outputDuration)}');
+        'afade=t=in:st=0:d=${outputDuration == null ? fadeIn : fadeIn.clamp(0, outputDuration)}',
+      );
     }
     if (fadeOut > 0 && outputDuration != null) {
       final length = fadeOut.clamp(0.0, outputDuration);
@@ -192,15 +207,18 @@ class HarborMediaEngine {
       if (effects.channels != null) ...['-ac', '${effects.channels}'],
       if (effects.sampleRate != null || effects.normalize) ...[
         '-ar',
-        '${effects.sampleRate ?? 48000}'
+        '${effects.sampleRate ?? 48000}',
       ],
       ...codec,
-      temporary
+      temporary,
     ];
     try {
       if (_cancelled) throw const MediaExportCancelled();
-      final process =
-          await Process.start(executable(), args, runInShell: false);
+      final process = await Process.start(
+        executable(),
+        args,
+        runInShell: false,
+      );
       _running = process;
       if (_cancelled) process.kill();
       final errors = StringBuffer();
@@ -208,24 +226,33 @@ class HarborMediaEngine {
           .transform(utf8.decoder)
           .transform(const LineSplitter())
           .listen((line) {
-        if (line.startsWith('out_time_us=')) {
-          final micros = int.tryParse(line.substring('out_time_us='.length));
-          if (micros != null) onProgress?.call(micros / 1000000);
-        }
-      }).asFuture<void>();
+            if (line.startsWith('out_time_us=')) {
+              final micros = int.tryParse(
+                line.substring('out_time_us='.length),
+              );
+              if (micros != null) onProgress?.call(micros / 1000000);
+            }
+          })
+          .asFuture<void>();
       final stderrDone = process.stderr.transform(utf8.decoder).listen((text) {
         if (errors.length < 8000) errors.write(text);
       }).asFuture<void>();
-      final code = await process.exitCode.timeout(const Duration(hours: 2),
-          onTimeout: () {
-        process.kill();
-        throw TimeoutException('Export timed out');
-      });
+      final code = await process.exitCode.timeout(
+        const Duration(hours: 2),
+        onTimeout: () {
+          process.kill();
+          throw TimeoutException('Export timed out');
+        },
+      );
       await Future.wait([stdoutDone, stderrDone]);
       if (_cancelled) throw const MediaExportCancelled();
       if (code != 0) {
         throw ProcessException(
-            executable(), args, errors.toString().trim(), code);
+          executable(),
+          args,
+          errors.toString().trim(),
+          code,
+        );
       }
       if (!await File(temporary).exists()) {
         throw const FileSystemException('Encoder produced no output');
@@ -234,7 +261,8 @@ class HarborMediaEngine {
       // after encoding so an existing file is never deliberately overwritten.
       if (await File(output).exists()) {
         throw const FileSystemException(
-            'Output file already exists; choose another name');
+          'Output file already exists; choose another name',
+        );
       }
       await File(temporary).rename(output);
     } finally {

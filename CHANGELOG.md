@@ -3,6 +3,8 @@
 ## Source preparation — 2026-10-28
 
 - Added MIT licensing, dependency notices, clean source export and Windows CI.
+- Added English/Arabic project pages and a six-image interface gallery.
+- Bounded FLAC encoder frame sizes for normalized/spatial exports on newer FFmpeg builds.
 - Added build instructions and contribution guidelines.
 - Renamed the Dart package/application classes to ToneHarbor; retained stable storage identifiers for installed user profiles.
 
