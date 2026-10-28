@@ -39,7 +39,7 @@ dependencies:
 
   # File picking & permissions
   file_picker: ^8.0.3
-  image_picker: ^1.0.7
+  image_picker: ^1.2.4
   permission_handler: ^11.3.1
 
   # Preferences & storage
